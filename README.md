@@ -1,3 +1,2 @@
-#One Click Solr Install
-##How to run
-Simply run the Install-Solr.bat file
+# One Click Solr Install
+Simply run *one-click-solr-install.bat* then enter the desired version from the list!
