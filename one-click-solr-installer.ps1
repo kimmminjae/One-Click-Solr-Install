@@ -5,22 +5,31 @@ Param(
 )
 try {
     $javaVerbose = java -verbose
+    cls
     $javaVersionPath = ($javaVerbose -split '\n')[0]
     $javaVersionPath = $javaVersionPath -replace '\\lib\\rt.jar]' -replace ''
     $javaVersionPath = $javaVersionPath -replace '\[Opened ' -replace ''
-    if ($javaVersionPath -Match 'x86') { throw 'JRE (64-bit) not installed. Please install JRE (64-bit).' }
+    if ($javaVersionPath -Match 'x86') {
+        Write-Host 'JRE (64-bit) not installed. Please install JRE (64-bit). Download: https://www.java.com/en/download/manual.jsp'
+        Write-Host 'Press any key to exit...'
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+        exit
+    }
 }
-catch [System.Management.Automation.ItemNotFoundException] {
-    throw 'JRE (64-bit) not installed. Please install JRE (64-bit).'
+catch {
+    Write-Host 'JRE (64-bit) not installed. Please install JRE (64-bit). Download: https://www.java.com/en/download/manual.jsp'
+    Write-Host 'Press any key to exit...'
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+    exit
 }
 
-$WebResponseObj = Invoke-WebRequest -Uri "https://archive.apache.org/dist/lucene/solr/"
-$innerHTMLofLinks = $WebResponseObj.links | select innerhtml
+$WebResponseObj = Invoke-WebRequest -Uri "https://archive.apache.org/dist/lucene/solr/" -UseBasicParsing
+$innerHTMLofLinks = $WebResponseObj.links | select outerHTML
 $innerHTMLs = $innerHTMLofLinks -split '\n'
 $outItems = New-Object System.Collections.Generic.List[System.String]
 foreach ($innerHTML in $innerHTMLs) {
-    $innerHTML = $innerHTML -replace '\@\{innerHTML\=' -replace ''
-    $innerHTML = $innerHTML -replace '\/\}' -replace ''
+    $innerHTML = $innerHTML -replace '\@\{outerHTML.*/\"\>' -replace ''
+    $innerHTML = $innerHTML -replace '\/\<\/a\>\}' -replace ''
     if($innerHTML -match '([0-9].[0-9]?[0-9].?[0-9]?-?[A-B]?\w*)') {
     $version = $innerHTML
     $outItems.Add($version)
