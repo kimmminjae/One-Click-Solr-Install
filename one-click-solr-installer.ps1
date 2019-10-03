@@ -22,7 +22,7 @@ catch {
     $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
     exit
 }
-
+# Retrieve the list of Solr versions
 $WebResponseObj = Invoke-WebRequest -Uri "https://archive.apache.org/dist/lucene/solr/" -UseBasicParsing
 $innerHTMLofLinks = $WebResponseObj.links | select outerHTML
 $innerHTMLs = $innerHTMLofLinks -split '\n'
@@ -49,27 +49,46 @@ Write-Host $versionsString
 
 Write-Host "`nAbove are all the available versions of Solr."
 $versionInput = Read-Host -Prompt "Please enter the desired Solr version"
-$isValidInput = $versions -ccontains $versionInput
+$isValidInput = $outItems -ccontains $versionInput
 while (!$isValidInput) {
-    Write-Host "Your input isn't valid."
+    Write-Host "Your input is invalid."
     $versionInput = Read-Host -Prompt "Please enter the desired Solr version (eg. 7.2.1)"
-    $isValidInput = $versions -ccontains $versionInput
+    $isValidInput = $outItems -ccontains $versionInput
 }
 
+# Configuration selection by the user
 $solrVersion = $versionInput
 $solrVersionText = $solrVersion -replace '\.' -replace ''
 $installFolder = "c:\solr" + $solrVersionText
 $solrHost = "solr" + $solrVersionText
 
-Write-Host 'Parameters:'
-Write-Host '1. Host Name: ' + $solrHost
-Write-Host '2. Installation Folder: ' + $installFolder
+Write-Host ' '
+Write-Host ' '
+Write-Host 'Host Name Options:'
+Write-Host '1.' $solrHost
+Write-Host '2. localhost'
+Write-Host '3. Custom Input'
+$confirmation = Read-Host 'Choose (1/2/3)'
+if ($confirmation -eq '3') {
+    $solrHost = Read-Host 'Input the desired Host Name: '
+} elseif ($confirmation -eq '2') {
+    $solrHost = 'localhost'
+}
+Write-Host $solrHost 'selected'
 
+Write-Host ' '
+Write-Host ' '
+Write-Host 'Default Installation Folder: ' $installFolder
+$confirmation2 = Read-Host 'Use Default? (Y/N)'
+if ($confirmation2 -eq 'n') {
+    $installFolder = Read-Host 'Input the desired installation location'
+}
+Write-Host 'Installation Folder:' $installFolder
+
+cls
 
 ## Script below has minor modifications to Jeremy Davis’ Low-Effort Solr Install script.
 ## Check out his original script at https://jermdavis.wordpress.com/2017/10/30/low-effort-solr-installs/
-
-
 
 $JREPath = $javaVersionPath ## Note that if you're running 32bit java, you will need to change this path
 $solrName = "solr-$solrVersion"
